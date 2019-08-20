@@ -14,12 +14,13 @@
 
 <script>
 import Toolbar from './components/Toolbar'
+
 // import { mapActions } from 'vuex'
 
 export default {
   name: 'App',
   components: {
-    Toolbar
+    Toolbar,
   },
   data() {
     return {

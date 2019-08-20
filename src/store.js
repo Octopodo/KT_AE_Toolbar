@@ -1,8 +1,37 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import commands from './commands.js'
+// import { start } from 'repl';
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
+function Options(state) {
+  let opts =  {
+    comp: {
+      selected: state.options[0].value,
+      settings: {}
+    },
+    layer: {
+      selected: state.options[1].value
+    },
+    properties: {
+      markers: state.switchKeys[1].value
+    },
+    interval: {
+      workarea: state.options[2].value
+    },
+    time: {}
+  }
+
+  return opts
+}
+
+function callCommand(command){
+  const msg = new VulcanMessage(VulcanMessage.TYPE_PREFIX + 'com.kt.tools.server.callComand');
+  msg.setPayload(command);
+  VulcanInterface.dispatchMessage(msg)
+}
+const toolbarPrefix = 'com.kt.tools.server.'
 export default new Vuex.Store({
   state: {
     tooltipDelay: 800,
@@ -11,10 +40,14 @@ export default new Vuex.Store({
     bakeFrameRate: 1,
     tooltip: '',
     quickButtons: [
-      {name:'addNull', icon:'center_focus_strong', method: 'blockui',  tooltip:'Add null.'},
-      {name:'addSolid', icon:'crop_landscape', method:'', tooltip:'Add a new solid.',},
-      {name:'fastComp', icon:'movie', method:'', tooltip:'Add comp with preset settings.'},
+      {name:'fitCompToContent', icon:'flip_to_back', method:'fitCompToContent', tooltip:"Resize comp to fit the content.(Don't work with shape layers by the moment)"},
+      {name:'fitContentToComp', icon:'flip_to_front', method:'fitContentToComp', tooltip:"Resize the content to fit the comp size.(Don't work with shape layers by the moment)"},
+      {name:'compToContentDuration', icon:'settings_ethernet', method:'fitCompsToContentDuration', tooltip:"Fits the duration of the comp to the longest layer."},
+      {name:'addNull', icon:'center_focus_strong', method: 'addNull',  tooltip:'Add null.'},
+      {name:'addSolid', icon:'crop_landscape', method:'addSolid', tooltip:'Add a new solid.',},
+      {name:'fastComp', icon:'movie', method:'createComp', tooltip:'Add comp with preset settings.'},
     ],
+
     expressionButtons: {
       bake: {
         name:'bakeExpressions', 
@@ -32,12 +65,20 @@ export default new Vuex.Store({
       }
     },
 
-    expressionOptions:[
+    smart:{
+      name:'projectSelection', 
+      icon:'grade', 
+      tooltip:'Perform smart operation.',
+      method: 'smartPerform',
+      value: false,
+      small: true
+    },
+    options:[
       {
         name:'projectSelection', 
         icon:'folder', 
         tooltip:'Perform on project selection.',
-        method: 'activateExpressionOption',
+        method: 'selectOption',
         value: false,
         small: true
       },
@@ -45,7 +86,7 @@ export default new Vuex.Store({
         name:'selectedLayers',
         icon:'view_stream',
         tooltip:'Perform on selected layers.',
-        method:'activateExpressionOption',
+        method:'selectOption',
         value: false,
         small: true
       },
@@ -53,7 +94,7 @@ export default new Vuex.Store({
         name:'workArea',
         icon:'space_bar',
         tooltip:'Perform on workarea.',
-        method:'activateExpressionOption',
+        method:'selectOption',
         value: false,
         small: false
       },
@@ -92,40 +133,40 @@ export default new Vuex.Store({
         value: false
       }
     ],
-    keyArea: {
-      name: 'useArea',
-      icon: 'space_bar',
-      tooltip: 'Only frames in work area.',
-      method: 'switchKeyArea',
-      value: false
-    },
 
     keyButtons: [
       {
         name: 'fastBackward',
         icon: 'first_page',
         tooltip: 'Move keys n frames back.',
-        method: '',
+        method: 'keysFastBackwards',
       },
       {
         name: 'backwards',
         icon: 'chevron_left',
         tooltip: 'Move keys 1 frame back.',
-        method: '',
+        method: 'keysBackwards',
       },
       {
         name: 'forward',
         icon: 'chevron_right',
         tooltip: 'Move keys 1 frame forward.',
-        method: '',
+        method: 'keysForward',
       },
       {
         name: 'fastForward',
         icon: 'last_page',
         tooltip: 'Move keys n frames forward.',
-        method: '',
+        method: 'keysFastForward',
       },
     ],
+
+    settings: {
+      name: 'settings',
+      icon: 'settings',
+      tooltip: 'Advanced Settings',
+      method: 'advancedSettings'
+    },
 
     renderPresset:{
       name: 'renderPresset',
@@ -139,6 +180,9 @@ export default new Vuex.Store({
     }
   },
   mutations: {
+    advancedSettings: (state, payload) => {
+      callCommand (`KT.invoke('ToolbarSettings')`);
+    },
     setHelptip: (state, payload) => {
       state.tooltip = payload
     },
@@ -155,9 +199,7 @@ export default new Vuex.Store({
       state.switchKeys[0].value = !state.switchKeys[0].value;
       state.switchKeys[1].value = !state.switchKeys[1].value
     },
-    activateExpressionOption: (state, payload) => {
-      state.expressionOptions[payload].value = !state.expressionOptions[payload].value
-    },
+
     changeFrames: (state, payload) => {
       state.numFrames = payload
     },
@@ -166,11 +208,52 @@ export default new Vuex.Store({
     },
     switchKeyArea: (state) => {
       state.keyArea.value = !state.keyArea.value
+    },
+    switchKeySelectedLayers: (state) => {
+      state.keyLayers.value = !state.keyLayers.value
+    },
+    createComp:(state)=>{
+      let opts = Options(state);
+      opts.comp.settings=  {
+          name: 'Custom Comp',
+          open: true
+      }
+
+      callCommand (`KT.cast('CompManager', 'createComp', ${JSON.stringify(opts)})`);
+    },
+    smartPerform:(state)=> {
+      state.smart.value = !state.smart.value;
+      for(var i in state.options){
+        state.options[i].value = (state.smart.value == true)? false: state.options[i].value
+      }
+    },
+
+    selectOption: (state, payload) => {
+      state.options[payload].value = !state.options[payload].value
+      state.smart.value = (state.options[payload].value == true)? false: state.smart.value;
+    },
+
+    fitCompToContent:(state)=>{
+      commands.call(commands.fitCompToContent(state.options))
+    },
+    fitContentToComp:()=>{
+      const msg = new VulcanMessage(VulcanMessage.TYPE_PREFIX+ 'com.kt.tools.server.callCommand')
+      VulcanInterface.dispatchMessage(msg)
+    },
+    fitCompsToContentDuration:(state)=>{
+      let opts = Options(state)
+      callCommand(`KT.cast('CompManager', 'fitCompsToContentDuration', ${JSON.stringify(opts)}) `)
     }
   },
   actions: {
+    advancedSettings: context => {
+      context.commit('advancedSettings')
+    },
     blockui: context =>{
       context.commit('blockui')
+    },
+    smartPerform: context =>{
+      context.commit('smartPerform')
     },
     unblockui: context => {
       context.commit('unblockui')
@@ -187,12 +270,75 @@ export default new Vuex.Store({
     switchKeys: context =>{
       context.commit('switchKeys')
     },
-    activateExpressionOption: (context, payload) => {
-      context.commit('activateExpressionOption', payload)
+    selectOption: (context, payload) => {
+      context.commit('selectOption', payload)
     },
     switchKeyArea: (context) =>{
       context.commit('switchKeyArea')
+    },
+    switchKeySelectedLayers: (context) =>{
+      context.commit('switchKeySelectedLayers')
+    },
+    createComp: (context) => {
+      context.commit('createComp')
+    },
+    fitCompToContent: (context) => {
+      context.commit('fitCompToContent')
+    },
+    fitContentToComp: (context) => {
+      context.commit('fitContentToComp')
+    },
+
+    fitCompsToContentDuration:(context) => {
+      context.commit('fitCompsToContentDuration')
+    },
+
+    addNull: (context) => {
+      callCommand(`KT.cast('CompManager', 'addNull')`)
+    },
+    addSolid: (context) => {
+      callCommand(`KT.cast('CompManager', 'addSolid')`)
+    },
+
+    keysBackwards: (context) => {
+      let options = Options(context.state);
+      options.time.offset = -1;
+      options.time.units = 'f';
+      options.properties.keyed = true;
+      options.interval.overclock = true;
+      options.interval.underclock = true;
+      console.log(options)
+      callCommand(`KT.cast('ToolbarCommands').offsetKeys(${JSON.stringify(options)})`)
+    },
+    keysForward: (context) => {
+      let options = Options(context.state);
+      options.time.offset = 1;
+      options.time.units = 'f';
+      options.properties.keyed = true;
+      options.interval.overclock = true;
+      options.interval.underclock = true;
+      console.log(options)
+      callCommand(`KT.cast('ToolbarCommands').offsetKeys(${JSON.stringify(options)})`)
+    },
+    keysFastBackwards: (context) => {
+      let options = Options(context.state);
+      options.time.offset = -context.state.numFrames;
+      options.time.units = 'f';
+      options.properties.keyed = true;
+      options.interval.overclock = true;
+      options.interval.underclock = true;
+      console.log(options)
+      callCommand(`KT.cast('ToolbarCommands').offsetKeys(${JSON.stringify(options)})`)
+    },
+    keysFastForward: (context) => {
+      let options = Options(context.state);
+      options.time.offset = context.state.numFrames;
+      options.time.units = 'f';
+      options.properties.keyed = true;
+      options.interval.overclock = true;
+      options.interval.underclock = true;
+      console.log(options)
+      callCommand(`KT.cast('ToolbarCommands').offsetKeys(${JSON.stringify(options)})`)
     }
-    
   }
 })

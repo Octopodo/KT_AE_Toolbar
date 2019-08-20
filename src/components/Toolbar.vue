@@ -5,7 +5,8 @@
       <div class="title font-weight-thin top pa-0 pt-2 grey--text ml-3 mr-1" left>
         Quick controls:
       </div>
-      <v-divider vertical inset red :class="`ma-0 mr-2 my-0 small-separator`" ></v-divider>
+      <kt-divider type="small"/>
+  
       <div v-for="button in quickButtons" :key="button.name" class="ma-0">
         <v-btn 
           class="transparent ma-0 pa-0 white--text" 
@@ -18,7 +19,7 @@
           <v-icon small :color="colors.quickColor">{{button.icon}}</v-icon>
         </v-btn>
       </div>
-      <v-divider vertical inset red :class="`mx-2 mr-3 my-0 separator ${colors.separator}`"></v-divider>
+      <kt-divider type="normal"/>
 
 
       <!-- Expressions -->
@@ -26,7 +27,7 @@
         Expressions:
       </div>
 
-      <v-divider vertical inset red :class="`ma-0 mr-1 my-0 small-separator`" ></v-divider>
+      <kt-divider type="small"/>
       <!-- Expression switch -->
       <div class="ma-0">
         <v-btn 
@@ -52,34 +53,9 @@
         </v-btn>
       </div>
 
-      <v-divider vertical inset red :class="`ma-0 mr-1 my-0 small-separator`" ></v-divider>
 
-      <!-- Expression options -->
-      <div v-for="(button, index) in expressionOptions" :key="index" class="ma-0">
-        <v-btn 
-          class="transparent ma-0 pa-0" 
-          small 
-          icon 
-          @click="dispatch(button.method, index)"
-          @mouseover="help(button.tooltip)"
-          @mouseleave="help('')"
-        >
-          <v-icon 
-            v-if="button.value" 
-            color="orange lighten-3"
-            :style="button.small? 'font-size: 16px;' : ''" 
-             >{{button.icon}}</v-icon>
-          <v-icon 
-            v-else  
-            color="grey darken-2"
-            :style="button.small? 'font-size: 16px;' : ''"
-          >
-            {{button.icon}}
-          </v-icon>
-        </v-btn>
-      </div>
 
-      <v-divider vertical inset red :class="`mx-1 mr-3 my-0 small-separator`" ></v-divider>
+      <kt-divider type="small" class="mr-1"/>
 
       <!--  Bake Frame Rate -->
       <v-form class="pa-0 ma-0" ref="form" @submit.prevent>
@@ -120,13 +96,13 @@
       </div>
 
 
-      <v-divider vertical inset red :class="`mx-2 mr-3 my-0 separator ${colors.separator}`" ></v-divider>
+      <kt-divider type="normal" />
       <!-- KEYING -->
       <div class="title font-weight-thin top pa-0 grey--text mr-1">
         Keying:
       </div>
 
-      <v-divider vertical inset red :class="`ma-0 mr-1 my-0 small-separator`" ></v-divider>
+      <kt-divider type="small" />
 
       <!-- Switch keys -->
       <div class="ma-0" v-for="button in switchKeys" :key="button.name">
@@ -143,24 +119,7 @@
         </v-btn>
       </div>
 
-      <v-divider vertical inset red :class="`ma-0 mx-1 my-0 small-separator`" ></v-divider>
-      <!-- Key Area -->
-      <div class="ma-0">
-        <v-btn 
-          class="transparent ma-0 pa-0" 
-          small 
-          icon 
-          @click="dispatch(keyArea.method)"
-          @mouseover="help(keyArea.tooltip)"
-          @mouseleave="help('')"
-        >
-          <v-icon v-if="keyArea.value"  color="purple lighten-1" >{{keyArea.icon}}</v-icon>
-          <v-icon v-else  color="grey darken-2">{{keyArea.icon}}</v-icon>
-        </v-btn>
-      </div>
-
-      <v-divider vertical inset :class="`ma-0 mx-1 my-0 small-separator`">
-      </v-divider>
+      <kt-divider type="small" />
       <!-- Key Buttons -->
       <div v-for="button in keyButtons" :key="button.name" class="ma-0">
         <v-btn 
@@ -196,13 +155,71 @@
       <v-spacer></v-spacer>
 
       <!-- RENDERING -->
-      <v-divider vertical inset red :class="`mx-2 my-0 bold-separator grey--text text-darken-1`" ></v-divider>
+      <kt-divider type="bold" />
       <div class="title font-weight-thin top pa-0 grey--text mr-1">
-        Rendering:
+        Options:
+      </div>
+      <!-- Smart Option -->
+      <v-btn 
+          class="transparent ma-0 pa-0" 
+          small 
+          icon 
+          @click="dispatch(smartOption.method)"
+          @mouseover="help(smartOption.tooltip)"
+          @mouseleave="help('')"
+        >
+          <v-icon 
+            v-if="smartOption.value" 
+            color="purple darken-1"
+            :style="smartOption.small? 'font-size: 16px;' : ''" 
+             >{{smartOption.icon}}</v-icon>
+          <v-icon 
+            v-else  
+            color="grey darken-2"
+            :style="smartOption.small? 'font-size: 16px;' : ''"
+          >
+            {{smartOption.icon}}
+          </v-icon>
+        </v-btn>
+      <kt-divider type="small" />
+      <!-- Options -->
+      <div v-for="(button, index) in options" :key="index" class="ma-0">
+        <v-btn 
+          class="transparent ma-0 pa-0" 
+          small 
+          icon 
+          @click="dispatch(button.method, index)"
+          @mouseover="help(button.tooltip)"
+          @mouseleave="help('')"
+        >
+          <v-icon 
+            v-if="button.value" 
+            color="deep-purple lighten-2"
+            :style="button.small? 'font-size: 16px;' : ''" 
+             >{{button.icon}}</v-icon>
+          <v-icon 
+            v-else  
+            color="grey darken-2"
+            :style="button.small? 'font-size: 16px;' : ''"
+          >
+            {{button.icon}}
+          </v-icon>
+        </v-btn>
       </div>
 
+      <kt-divider />
+      <v-btn 
+          class="transparent ma-0 pa-0 white--text" 
+          small 
+          icon 
+          @click="dispatch(settingsButton.method)" 
+          @mouseover.prevent="help(settingsButton.tooltip)"
+          @mouseleave.prevent="help('')"
+        >
+          <v-icon small :color="colors.quickColor">{{settingsButton.icon}}</v-icon>
+        </v-btn>
       <!-- Render Buttons -->
-      <div v-for="button in renderButtons" :key="button.name" class="ma-0">
+      <!-- <div v-for="button in renderButtons" :key="button.name" class="ma-0">
         <v-btn 
           class="transparent ma-0 pa-0 white--text" 
           small 
@@ -213,7 +230,7 @@
         >
           <v-icon small>{{button.icon}}</v-icon>
         </v-btn>
-      </div>
+      </div> -->
 
     </v-layout>
   </div>
@@ -270,11 +287,12 @@ export default {
       tooltipDelay: this.$store.state.tooltipDelay,
       quickButtons: this.$store.state.quickButtons,
       expressionButtons: this.$store.state.expressionButtons,
-      expressionOptions: this.$store.state.expressionOptions,
+      options: this.$store.state.options,
       renderButtons: this.$store.state.renderButtons,
       keyButtons: this.$store.state.keyButtons,
       switchKeys: this.$store.state.switchKeys,
-      keyArea: this.$store.state.keyArea,
+      smartOption: this.$store.state.smart,
+      settingsButton: this.$store.state.settings,
       inputRules: [
         v => !isNaN(Number(v)) || 'Must be a number'
       ],
@@ -289,17 +307,6 @@ export default {
 .fill-horizontal
   width: 100%
 
-.separator
-  height: 30px!important
-  border-width: 1px!important
-
-.small-separator
-  background-color: #333333
-  height: 20px
-  margin-top: 5px!important
-
-.bold-separator
-  border-width: 2px
 
 .transparent
   background-color: transparent!important
